@@ -21,7 +21,8 @@ class ApiController extends Controller{
 		 */
 		$validator = Validator::make($request->all(), [
             'username' => 'required|min:6|unique:users',
-            'password'=> 'required|min:6'
+            'password'=> 'required|min:6|confirmed',
+			'password_confirmation' => 'required'
         ]);
 		
 		// Returns a message of the error.
@@ -29,7 +30,7 @@ class ApiController extends Controller{
             return response()->json([
                 'success' => false, 
                 'error' => $validator->errors()
-            ], 401);
+            ]);
         }
 		// User creation
 		$user = new User();
@@ -38,16 +39,17 @@ class ApiController extends Controller{
 		$user->save();
 		 
         $data = array(
-			'user_id' => $user->id,
+			'user_id' => $user->user_id,
 			'username' => $user->username,
 		);
 		
         $token = JWTAuth::fromUser($user);
 		
 		return response()->json([
-				'data' => $data,
-				'token' => $token
-			], 200);
+			'success' => true,
+			'data' => $data,
+			'token' => $token
+		], 200);
     }
  
 	/*
@@ -64,7 +66,7 @@ class ApiController extends Controller{
             return response()->json([
 				'success'=> false, 
 				'error'=> $validator->messages()
-			], 401);
+			]);
         }
         
 	    $input = $request->only('username', 'password');
@@ -89,10 +91,9 @@ class ApiController extends Controller{
 		
         return response()->json([
 			'success' => true, 
-			'data'=> [ 
-                'user' => $user,
-				'token' => $token 
-			]
+            'user' => $user,
+			'token' => $token 
+			
 		], 200);
     }
 	/*
