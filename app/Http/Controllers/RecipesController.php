@@ -77,7 +77,7 @@ class RecipesController extends Controller
         $imgName = date('dmYHis').uniqid().'.'.$extension;
        
         $image = $request->file('image');
-        $image->storeAs('public/images',$imgName);
+        //$image->storeAs('public/images',$imgName);
         				
     	$recipe = new Recipes();
     	$recipe->recipe_name = $request->get('recipe_name');
@@ -87,13 +87,28 @@ class RecipesController extends Controller
         $recipe->img_path = url('/storage/images/'.$imgName);
         $recipe->created_at = date('Y-m-d H:i:s');
 		$recipe->user_id = $this->user->user_id;
+        echo $recipe;
+        //$recipe->save();
         
-        $recipe->save();
-    	
+        /* Gets ingredients data */
+        $ingredients = $request->get('ingredient');
+        $quantitys = $request->get('quantity');
         
-        //TODO: add ingredient.
-          
+        /* Sets each ingredient row with quantity */
+        foreach ($ingredients as $key => $value) {
+            $data = array(
+                'ingredient' => $value,
+                'quantity' => $quantitys[$key]
+                //'recipe_id' =>$recipe->recipe_id 
+            );
+            echo json_encode($data);
+            /* Call function from Ingredient controller to submit data. */
+
+            //TODO: Call function from ingredient controller.
+        }
     
+    	      
+    /*
     	if($recipe){
     	    return response()->json([
     	    	'success' => true,
@@ -106,7 +121,7 @@ class RecipesController extends Controller
     			'message' => 'Sorry, recipe could not be added.'
     		], 500);
     	}
-        
+    */    
     }
 
     /*
@@ -138,6 +153,8 @@ class RecipesController extends Controller
         
         $updated = $recipe->fill($request->input())->save();
         
+        //TODO: Functionality to update recipe's image.
+
         //TODO: update ingredients.
 
     	if($updated){
@@ -161,6 +178,8 @@ class RecipesController extends Controller
         $this->user = JWTAuth::parseToken()->authenticate();
 
     	$recipe = $this->user->recipes()->find($recipeId);
+
+        //TODO: Delete recipe's image.
 
     	if(!$recipe){
     		return response()->json([
