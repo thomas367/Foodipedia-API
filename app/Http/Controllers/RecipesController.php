@@ -60,29 +60,40 @@ class RecipesController extends Controller
      */
     public function storeRecipe(Request $request){
         $this->user = JWTAuth::parseToken()->authenticate();
-
+    
     	$validator = Validator::make($request->all(), [
     		'recipe_name' => 'required',
     		'cuisine' => 'required',
     		'category' => 'required',
-    		'directions' => 'required'
+    		'directions' => 'required',
+            'image' => 'required|image|max:600'
     	]);
 
 		if ($validator->fails()) {
             return response()->json($validator->messages());
         }
-				
+
+        $extension=$request->file('image')->getClientOriginalExtension();        
+        $imgName = date('dmYHis').uniqid().'.'.$extension;
+       
+        $image = $request->file('image');
+        $image->storeAs('public/images',$imgName);
+        				
     	$recipe = new Recipes();
     	$recipe->recipe_name = $request->get('recipe_name');
     	$recipe->cuisine = $request->get('cuisine');
     	$recipe->category = $request->get('category');
     	$recipe->directions = $request->get('directions');
-		$recipe->created_at = date('Y-m-d H:i:s');
+        $recipe->img_path = url('/storage/images/'.$imgName);
+        $recipe->created_at = date('Y-m-d H:i:s');
 		$recipe->user_id = $this->user->user_id;
+        
         $recipe->save();
     	
+        
         //TODO: add ingredient.
-
+          
+    
     	if($recipe){
     	    return response()->json([
     	    	'success' => true,
@@ -95,6 +106,7 @@ class RecipesController extends Controller
     			'message' => 'Sorry, recipe could not be added.'
     		], 500);
     	}
+        
     }
 
     /*

@@ -18,7 +18,8 @@ class CreateRecipesTable extends Migration
             $table->string('recipe_name');
             $table->string('cuisine');
             $table->string('category');
-            $table->string('directions');
+            $table->text('directions');
+            $table->string('img_path');
             $table->timestamp('created_at');
             $table->integer('user_id')->unsigned();
             $table->engine = 'InnoDB';
