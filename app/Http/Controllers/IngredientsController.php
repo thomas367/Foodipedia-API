@@ -10,15 +10,25 @@ class IngredientsController extends Controller
     /* 
      * Get ingredients of a specific recipe 
      */
-    public function getIngredients(){
+    public function getIngredients($recipeId){
+    	$ingredients = \App\Ingredients::where('recipe_id', '=', $recipeId)
+    		->orderBy('ingrentient_id')
+            ->get(['ingredient_name', 'quantity']) 
+            ->toArray();
 
+        return $ingredients;
     }
 
     /* 
      * Store ingredients of a specific recipe 
      */
-    public function storeIngredients(){
+    public function storeIngredients($data){
 
+    	$ingredient = new Ingredients();
+    	$ingredient->ingredient_name = $data['ingredient'];
+    	$ingredient->quantity = $data['quantity'];
+    	$ingredient->recipe_id = $data['recipe_id'];
+    	$ingredient->save();
     }
 
     /* 

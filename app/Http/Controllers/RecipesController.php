@@ -20,7 +20,7 @@ class RecipesController extends Controller
      */
     public function index(){
     	$recipes = \App\Recipes::orderBy('created_at', 'desc')
-            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'directions', 'created_at']) 
+            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' ,'directions', 'created_at']) 
             ->toArray();
 
         return $recipes;
@@ -34,7 +34,7 @@ class RecipesController extends Controller
 
         return $this->user->recipes()
     		->orderBy('created_at', 'desc')
-            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'directions', 'created_at']) 
+            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' ,'directions', 'created_at']) 
     		->toArray(); 
     }
 	
@@ -44,14 +44,15 @@ class RecipesController extends Controller
     public function showRecipeData($recipeId=null){
         
         $recipe = \App\Recipes::where('recipe_id', '=', $recipeId)
-            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'directions', 'created_at'])
+            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' ,'directions', 'created_at'])
             ->toArray();
 
-        //TODO: Call ingredients
+        $ingredientsControllerObject = new IngredientsController();
+        $ingredients = $ingredientsControllerObject->getIngredients($recipeId);
             
         return response()->json([
-            'recipe' => $recipe
-            //'ingredients' => $ingredients
+            'recipe' => $recipe,
+            'ingredients' => $ingredients
         ]);
     }
 
@@ -77,7 +78,7 @@ class RecipesController extends Controller
         $imgName = date('dmYHis').uniqid().'.'.$extension;
        
         $image = $request->file('image');
-        //$image->storeAs('public/images',$imgName);
+        $image->storeAs('public/images',$imgName);
         				
     	$recipe = new Recipes();
     	$recipe->recipe_name = $request->get('recipe_name');
@@ -87,28 +88,24 @@ class RecipesController extends Controller
         $recipe->img_path = url('/storage/images/'.$imgName);
         $recipe->created_at = date('Y-m-d H:i:s');
 		$recipe->user_id = $this->user->user_id;
-        echo $recipe;
-        //$recipe->save();
+        $recipe->save();
         
         /* Gets ingredients data */
         $ingredients = $request->get('ingredient');
-        $quantitys = $request->get('quantity');
+        $quantities = $request->get('quantity');
         
         /* Sets each ingredient row with quantity */
         foreach ($ingredients as $key => $value) {
             $data = array(
                 'ingredient' => $value,
-                'quantity' => $quantitys[$key]
-                //'recipe_id' =>$recipe->recipe_id 
+                'quantity' => $quantities[$key],
+                'recipe_id' =>$recipe->recipe_id 
             );
-            echo json_encode($data);
             /* Call function from Ingredient controller to submit data. */
-
-            //TODO: Call function from ingredient controller.
-        }
+            $ingredientsControllerObject = new IngredientsController();
+            $ingredientsControllerObject->storeIngredients($data);
+        }      
     
-    	      
-    /*
     	if($recipe){
     	    return response()->json([
     	    	'success' => true,
@@ -120,8 +117,7 @@ class RecipesController extends Controller
     			'success' => false,
     			'message' => 'Sorry, recipe could not be added.'
     		], 500);
-    	}
-    */    
+    	}   
     }
 
     /*

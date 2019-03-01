@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ingredients extends Model
 {
+    public $timestamps = false;
     protected $primaryKey = 'ingredient_id';
     protected $foreignKey = 'recipe_id';
 
