@@ -91,8 +91,8 @@ class RecipesController extends Controller
         $recipe->save();
         
         /* Gets ingredients data */
-        $ingredients = $request->get('ingredient');
-        $quantities = $request->get('quantity');
+        $ingredients = explode(',', $request->get('ingredient'));
+        $quantities = explode(',', $request->get('quantity'));
         
         /* Sets each ingredient row with quantity */
         foreach ($ingredients as $key => $value) {
@@ -105,7 +105,7 @@ class RecipesController extends Controller
             $ingredientsControllerObject = new IngredientsController();
             $ingredientsControllerObject->storeIngredients($data);
         }      
-    
+	
     	if($recipe){
     	    return response()->json([
     	    	'success' => true,
@@ -117,7 +117,7 @@ class RecipesController extends Controller
     			'success' => false,
     			'message' => 'Sorry, recipe could not be added.'
     		], 500);
-    	}   
+    	}
     }
 
     /*
