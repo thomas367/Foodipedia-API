@@ -20,7 +20,7 @@ class RecipesController extends Controller
      */
     public function index(){
     	$recipes = \App\Recipes::orderBy('created_at', 'desc')
-            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' ,'directions', 'created_at']) 
+            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' , 'created_at']) 
             ->toArray();
 
         return $recipes;
@@ -34,7 +34,7 @@ class RecipesController extends Controller
 
         return $this->user->recipes()
     		->orderBy('created_at', 'desc')
-            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' ,'directions', 'created_at']) 
+            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' , 'created_at']) 
     		->toArray(); 
     }
 	
