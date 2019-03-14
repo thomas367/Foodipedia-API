@@ -12,8 +12,8 @@ class IngredientsController extends Controller
      */
     public function getIngredients($recipeId){
     	$ingredients = \App\Ingredients::where('recipe_id', '=', $recipeId)
-    		->orderBy('ingrentient_id')
-            ->get(['ingredient_name', 'quantity']) 
+    		->orderBy('ingredient_id')
+            ->get(['ingredient_id', 'ingredient_name', 'quantity']) 
             ->toArray();
 
         return $ingredients;

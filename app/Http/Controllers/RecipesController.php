@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Recipes;
 use JWTAuth;
 use Validator, DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Http\Request;
 
 class RecipesController extends Controller
@@ -49,7 +50,14 @@ class RecipesController extends Controller
 
         $ingredientsControllerObject = new IngredientsController();
         $ingredients = $ingredientsControllerObject->getIngredients($recipeId);
-            
+        
+
+		if(!$recipe){
+			return response()->json([
+				'error' => 'Recipe not found.'
+			], 404);
+		}
+		
         return response()->json([
             'recipe' => $recipe,
             'ingredients' => $ingredients
@@ -71,7 +79,10 @@ class RecipesController extends Controller
     	]);
 
 		if ($validator->fails()) {
-            return response()->json($validator->messages());
+            return response()->json([
+				'success' => false,
+				'error' => $validator->messages()
+			]);
         }
 
         $extension=$request->file('image')->getClientOriginalExtension();        
@@ -149,10 +160,11 @@ class RecipesController extends Controller
         
         $updated = $recipe->fill($request->input())->save();
         
-        //TODO: Functionality to update recipe's image.
-
-        //TODO: update ingredients.
-
+        /*
+		 * 1. Functionality to update recipe's image.
+         * 2. Update ingredients.
+		 */
+		 
     	if($updated){
     		return response()->json([
     			'success' => true,
@@ -173,18 +185,23 @@ class RecipesController extends Controller
     public function deleteRecipe($recipeId){
         $this->user = JWTAuth::parseToken()->authenticate();
 
-    	$recipe = $this->user->recipes()->find($recipeId);
-
-        //TODO: Delete recipe's image.
-
-    	if(!$recipe){
+    	$recipe = $this->user->recipes()->find($recipeId);   
+		
+		if(!$recipe){
     		return response()->json([
     			'success' => false,
     			'message' => 'Error, occured.'
     		], 400);
     	}
-
-    	if($recipe->delete()){
+		
+		$imagePath = $recipe->img_path;	
+		$image = pathinfo($imagePath);
+		
+		$deleted = $recipe->delete();
+			
+    	if($deleted){
+			File::delete('storage/images/'.$image['basename']);
+			
     		return response()->json([
     			'success' => true
     		], 200);

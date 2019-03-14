@@ -31,6 +31,6 @@ Route::group(['middleware' => 'auth.jwt'], function () {
     Route::get('myRecipes', 'RecipesController@getMyRecipes');
     Route::post('storeRecipe', 'RecipesController@storeRecipe');
     Route::post('updateRecipes/{recipeId?}', 'RecipesController@updateRecipe');
-    Route::delete('deleteRecipes/{recipeId?}', 'RecipesController@deleteRecipe');	
+    Route::post('deleteRecipes/{recipeId?}', 'RecipesController@deleteRecipe');	
 
 });
