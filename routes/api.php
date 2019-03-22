@@ -22,15 +22,16 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::post('login', 'ApiController@login');
 Route::post('register', 'ApiController@register');
 Route::get('recipes', 'RecipesController@index');
-Route::get('showRecipe/{recipeId?}', 'RecipesController@showRecipeData');
+Route::get('getRecipeData/{recipeId?}', 'RecipesController@getRecipeData');
+Route::get('searchRecipes/{keyword?}', 'RecipesController@searchRecipes');
 
 Route::group(['middleware' => 'auth.jwt'], function () {		
     //Route::get('logout', 'ApiController@logout');
-    //Route::get('user', 'ApiController@getAuthUser');
  
     Route::get('myRecipes', 'RecipesController@getMyRecipes');
     Route::post('storeRecipe', 'RecipesController@storeRecipe');
     Route::post('updateRecipes/{recipeId?}', 'RecipesController@updateRecipe');
-    Route::post('deleteRecipes/{recipeId?}', 'RecipesController@deleteRecipe');	
+    Route::post('deleteRecipes/{recipeId?}', 'RecipesController@deleteRecipe');
+	Route::post('deleteIngredient/{ingredientId?}', 'IngredientsController@deleteIngredients');
 
 });

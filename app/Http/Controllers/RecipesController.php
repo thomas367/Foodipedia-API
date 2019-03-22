@@ -13,7 +13,7 @@ class RecipesController extends Controller
     protected $user;
 
     public function __construct(){
-        $this->middleware('jwt.auth', ['except' => ['index', 'showRecipeData']]);
+        $this->middleware('jwt.auth', ['except' => ['index', 'getRecipeData', 'searchRecipes']]);
     }
 
     /*
@@ -26,6 +26,19 @@ class RecipesController extends Controller
 
         return $recipes;
     }
+	/*
+	 * Return all recipes with a keyword based 
+	 * on cuisine, caterogy or ingredient.
+	 */
+	public function searchRecipes($keyword=null){
+		$recipes = \App\Recipes::where('cuisine', '=', $keyword)
+			->orWhere('category', '=', $keyword)
+			->orderBy('created_at', 'desc')
+            ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path', 'created_at'])
+            ->toArray();
+			
+		return $recipes;
+	}
 
     /*
      * Return all recipes of loggenIn user.
@@ -42,7 +55,7 @@ class RecipesController extends Controller
     /*
      * Return all the data of the current recipe (with ingredients).
      */
-    public function showRecipeData($recipeId=null){
+    public function getRecipeData($recipeId=null){
         
         $recipe = \App\Recipes::where('recipe_id', '=', $recipeId)
             ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path' ,'directions', 'created_at'])
@@ -150,22 +163,73 @@ class RecipesController extends Controller
             'recipe_name' => 'required',
             'cuisine' => 'required',
             'category' => 'required',
-            'directions' => 'required'
+            'directions' => 'required',
+			'image' => 'image|max:600'
         ]);
-
-        if ($validator->fails()) {
-            return response()->json($validator->messages());
+		
+		if ($validator->fails()) {
+            return response()->json([
+				'success' => false,
+				'error' => $validator->messages()
+			]);
         }
+		
+		$oldImagePath = $recipe->img_path;	
+		$oldImage = pathinfo($oldImagePath);
 
-        
-        $updated = $recipe->fill($request->input())->save();
-        
-        /*
-		 * 1. Functionality to update recipe's image.
-         * 2. Update ingredients.
+		$updated = new Recipes();
+        $updated->exists = true;
+		$updated->recipe_id = $recipeId;
+		$updated->recipe_name = $request->get('recipe_name');
+		$updated->cuisine = $request->get('cuisine');
+		$updated->category = $request->get('category');
+		$updated->directions = $request->get('directions');
+		$updated->created_at = date('Y-m-d H:i:s');
+		$updated->user_id = $this->user->user_id;
+		
+		/*
+		 * Check if the user uploads also a new image
+		 * if yes then save the new image and after this
+		 * deletes the old.
 		 */
+		if($request->file('image')){
+			$extension=$request->file('image')->getClientOriginalExtension();        
+			$imgName = date('dmYHis').uniqid().'.'.$extension;
+       
+			$image = $request->file('image');
+			$image->storeAs('public/images',$imgName);
+			$updated->img_path = url('/storage/images/'.$imgName);
+			
+			File::delete('storage/images/'.$oldImage['basename']);
+		}
+		
+		$updated->save();
+		
+		/* Gets ingredients data */
+        $ingredientsIds = explode(',', $request->get('ingredientId'));
+		$ingredients = explode(',', $request->get('ingredient'));
+        $quantities = explode(',', $request->get('quantity'));
+        
+        /* Sets each ingredient row with quantity */
+        foreach ($ingredients as $key => $value) {
+            $data = array(
+                'ingredient' => $value,
+				'ingredientId' => $ingredientsIds[$key],
+                'quantity' => $quantities[$key],
+                'recipe_id' =>$recipeId 
+            );
+            /* Call function from Ingredient controller to submit data. */
+            $ingredientsControllerObject = new IngredientsController();
+			if($data['ingredientId']){
+				$ingredientsControllerObject->updateIngredients($data);
+			}
+			else{	
+            	$ingredientsControllerObject->storeIngredients($data);
+			}
+        }
 		 
     	if($updated){
+			
     		return response()->json([
     			'success' => true,
                 'recipe' => $recipe
@@ -176,7 +240,7 @@ class RecipesController extends Controller
     			'success' => false,
             	'message' => 'Sorry, recipe could not be updated'
     		], 500);
-    	}
+    	}   
     }
 
     /*
