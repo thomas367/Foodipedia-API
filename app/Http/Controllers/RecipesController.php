@@ -28,11 +28,12 @@ class RecipesController extends Controller
     }
 	/*
 	 * Return all recipes with a keyword based 
-	 * on cuisine, caterogy or ingredient.
+	 * on cuisine, caterogy or recipe name.
 	 */
 	public function searchRecipes($keyword=null){
 		$recipes = \App\Recipes::where('cuisine', '=', $keyword)
 			->orWhere('category', '=', $keyword)
+			->orWhere('recipe_name', '=', $keyword)
 			->orderBy('created_at', 'desc')
             ->get(['recipe_id', 'recipe_name', 'cuisine', 'category', 'img_path', 'created_at'])
             ->toArray();

@@ -48,7 +48,8 @@ class ApiController extends Controller{
 		return response()->json([
 			'success' => true,
 			'data' => $data,
-			'token' => $token
+			'token' => $token,
+			'expiresIn' => 7200
 		], 200);
     }
  
@@ -86,14 +87,11 @@ class ApiController extends Controller{
 				'error' => 'Failed to login, please try again.'
 			], 500);
         }
-
-		$user = JWTAuth::user($token);
 		
         return response()->json([
 			'success' => true, 
-            'user' => $user,
-			'token' => $token 
-			
+			'token' => $token, 
+			'expiresIn' => 7200
 		], 200);
     }
 	/*
